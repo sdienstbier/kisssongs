@@ -184,11 +184,63 @@
     #next-btn.show { display: inline-block; }
     #next-btn:hover { background: #dbbe6a; }
     #next-btn:active { transform: scale(0.97); }
+
+    /* Results screen */
+    #results {
+      background: #141414;
+      border: 2px solid #c8a84b;
+      border-radius: 14px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(200, 168, 75, 0.15), 0 20px 60px rgba(0,0,0,0.8);
+    }
+
+    #results-title {
+      font-size: 1.4rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #c8a84b;
+      margin-bottom: 20px;
+    }
+
+    #results-score {
+      font-size: 4rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    #results-grade {
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 0.1em;
+      margin-bottom: 32px;
+    }
+
+    #play-again-btn {
+      background: #c8a84b;
+      color: #000;
+      border: none;
+      padding: 13px 36px;
+      font-size: 0.95rem;
+      font-weight: 900;
+      font-family: 'Arial Black', Arial, sans-serif;
+      border-radius: 7px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    #play-again-btn:hover { background: #dbbe6a; }
+    #play-again-btn:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
 
-  <div id="score">Score: <span id="score-val">0 / 0</span></div>
+  <div id="score">Question <span id="q-num">1</span> of 10 &nbsp;|&nbsp; Score: <span id="score-val">0</span></div>
   <h1>KISS</h1>
 
   <div id="card">
@@ -196,7 +248,14 @@
     <div id="song-title">&nbsp;</div>
     <div id="choices"></div>
     <div id="feedback"></div>
-    <button id="next-btn" onclick="nextQuestion()">Next Song &rarr;</button>
+    <button id="next-btn">Next &rarr;</button>
+  </div>
+
+  <div id="results" style="display:none">
+    <div id="results-title">Quiz Complete!</div>
+    <div id="results-score"></div>
+    <div id="results-grade"></div>
+    <button id="play-again-btn" onclick="startQuiz()">Play Again</button>
   </div>
 
   <script>
@@ -408,15 +467,21 @@
       { title: "Last Chance",                 album: "Monster" },
     ];
 
+    const QUIZ_LENGTH = 10;
     const allAlbums = [...new Set(songs.map(s => s.album))];
     const artCache = {};
 
+    let questionQueue = [];
+    let questionIndex = 0;
     let correct = 0;
-    let total = 0;
-    let currentSong = null;
 
     function shuffle(arr) {
-      return arr.slice().sort(() => Math.random() - 0.5);
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
     }
 
     function getChoices(correctAlbum) {
@@ -455,18 +520,27 @@
       return null;
     }
 
+    function startQuiz() {
+      questionQueue = shuffle(songs).slice(0, QUIZ_LENGTH);
+      questionIndex = 0;
+      correct = 0;
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('card').style.display = 'block';
+      document.getElementById('score').style.display = 'block';
+      nextQuestion();
+    }
+
     function nextQuestion() {
       // Reset UI
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
       document.getElementById('next-btn').classList.remove('show');
 
-      // Pick a new song (avoid repeating last)
-      let song;
-      do { song = songs[Math.floor(Math.random() * songs.length)]; }
-      while (songs.length > 1 && song === currentSong);
-      currentSong = song;
+      const song = questionQueue[questionIndex];
+      questionIndex++;
 
+      document.getElementById('q-num').textContent = questionIndex;
+      document.getElementById('score-val').textContent = correct;
       document.getElementById('song-title').textContent = `"${song.title}"`;
 
       const choices = getChoices(song.album);
@@ -505,11 +579,10 @@
     }
 
     function handleAnswer(chosen, correctAlbum) {
-      total++;
       const isCorrect = chosen === correctAlbum;
       if (isCorrect) correct++;
 
-      document.getElementById('score-val').textContent = `${correct} / ${total}`;
+      document.getElementById('score-val').textContent = correct;
 
       // Disable all buttons and highlight correct/wrong
       document.querySelectorAll('.choice-btn').forEach(btn => {
@@ -524,10 +597,32 @@
       feedback.textContent = isCorrect ? 'Correct!' : `Nope — it was ${correctAlbum}`;
       feedback.className = isCorrect ? 'correct' : 'wrong';
 
-      document.getElementById('next-btn').classList.add('show');
+      const nextBtn = document.getElementById('next-btn');
+      const isLast = questionIndex >= QUIZ_LENGTH;
+      nextBtn.textContent = isLast ? 'See Results' : 'Next \u2192';
+      nextBtn.onclick = isLast ? showResults : nextQuestion;
+      nextBtn.classList.add('show');
     }
 
-    nextQuestion();
+    function showResults() {
+      document.getElementById('card').style.display = 'none';
+      document.getElementById('score').style.display = 'none';
+
+      const grades = [
+        { min: 10, label: "Perfect! You ARE the God of Thunder." },
+        { min: 8,  label: "Rock solid. KISS would be proud." },
+        { min: 6,  label: "Not bad. Keep rockin'." },
+        { min: 4,  label: "Shout it out loud — and study up." },
+        { min: 0,  label: "Time to put on some KISS records." },
+      ];
+      const grade = grades.find(g => correct >= g.min).label;
+
+      document.getElementById('results-score').textContent = `${correct} / ${QUIZ_LENGTH}`;
+      document.getElementById('results-grade').textContent = grade;
+      document.getElementById('results').style.display = 'block';
+    }
+
+    startQuiz();
   </script>
 
 </body>
