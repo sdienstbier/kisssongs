@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KISS Random Song</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: 'Arial Black', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 6rem;
+      letter-spacing: 0.6rem;
+      color: #c8a84b;
+      text-shadow: 0 0 30px rgba(200, 168, 75, 0.6), 0 0 60px rgba(200, 168, 75, 0.2);
+      margin-bottom: 40px;
+      user-select: none;
+    }
+
+    #card {
+      background: #141414;
+      border: 2px solid #c8a84b;
+      border-radius: 14px;
+      padding: 32px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(200, 168, 75, 0.15), 0 20px 60px rgba(0,0,0,0.8);
+    }
+
+    #album-cover-wrap {
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 24px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #222;
+      position: relative;
+    }
+
+    #album-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.3s ease;
+    }
+
+    #album-cover.loading {
+      opacity: 0;
+    }
+
+    #placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      background: #1a1a1a;
+    }
+
+    #song-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #fff;
+      margin-bottom: 8px;
+      min-height: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #album-name {
+      font-size: 0.95rem;
+      color: #888;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      min-height: 1.4em;
+    }
+
+    button {
+      background: #c8a84b;
+      color: #000;
+      border: none;
+      padding: 13px 36px;
+      font-size: 0.95rem;
+      font-weight: 900;
+      font-family: 'Arial Black', Arial, sans-serif;
+      border-radius: 7px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #dbbe6a;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>KISS</h1>
+
+  <div id="card">
+    <div id="album-cover-wrap">
+      <div id="placeholder">🎸</div>
+      <img id="album-cover" class="loading" src="" alt="Album Cover">
+    </div>
+    <div id="song-title">&nbsp;</div>
+    <div id="album-name">&nbsp;</div>
+    <button id="btn" onclick="pickRandomSong()">Random Song</button>
+  </div>
+
+  <script>
+    const songs = [
+      // KISS (1974)
+      { title: "Strutter",            album: "KISS" },
+      { title: "Nothin' to Lose",     album: "KISS" },
+      { title: "Firehouse",           album: "KISS" },
+      { title: "Cold Gin",            album: "KISS" },
+      { title: "Deuce",               album: "KISS" },
+      { title: "Black Diamond",       album: "KISS" },
+      // Hotter Than Hell (1974)
+      { title: "Got to Choose",       album: "Hotter Than Hell" },
+      { title: "Parasite",            album: "Hotter Than Hell" },
+      { title: "Hotter Than Hell",    album: "Hotter Than Hell" },
+      { title: "Watchin' You",        album: "Hotter Than Hell" },
+      { title: "Comin' Home",         album: "Hotter Than Hell" },
+      { title: "Strange Ways",        album: "Hotter Than Hell" },
+      // Dressed to Kill (1975)
+      { title: "Room Service",        album: "Dressed to Kill" },
+      { title: "C'mon and Love Me",   album: "Dressed to Kill" },
+      { title: "She",                 album: "Dressed to Kill" },
+      { title: "Love Her All I Can",  album: "Dressed to Kill" },
+      { title: "Rock and Roll All Nite", album: "Dressed to Kill" },
+      // Destroyer (1976)
+      { title: "Detroit Rock City",   album: "Destroyer" },
+      { title: "King of the Night Time World", album: "Destroyer" },
+      { title: "God of Thunder",      album: "Destroyer" },
+      { title: "Shout It Out Loud",   album: "Destroyer" },
+      { title: "Beth",                album: "Destroyer" },
+      { title: "Do You Love Me",      album: "Destroyer" },
+      { title: "Flaming Youth",       album: "Destroyer" },
+      // Rock and Roll Over (1976)
+      { title: "I Want You",          album: "Rock and Roll Over" },
+      { title: "Calling Dr. Love",    album: "Rock and Roll Over" },
+      { title: "Ladies Room",         album: "Rock and Roll Over" },
+      { title: "Hard Luck Woman",     album: "Rock and Roll Over" },
+      { title: "Makin' Love",         album: "Rock and Roll Over" },
+      { title: "Mr. Speed",           album: "Rock and Roll Over" },
+      // Love Gun (1977)
+      { title: "I Stole Your Love",   album: "Love Gun" },
+      { title: "Christine Sixteen",   album: "Love Gun" },
+      { title: "Shock Me",            album: "Love Gun" },
+      { title: "Love Gun",            album: "Love Gun" },
+      { title: "Plaster Caster",      album: "Love Gun" },
+      { title: "Almost Human",        album: "Love Gun" },
+      // Dynasty (1979)
+      { title: "I Was Made for Lovin' You", album: "Dynasty" },
+      { title: "Sure Know Something", album: "Dynasty" },
+      { title: "2,000 Man",           album: "Dynasty" },
+      { title: "X-Ray Eyes",          album: "Dynasty" },
+      // Creatures of the Night (1982)
+      { title: "Creatures of the Night", album: "Creatures of the Night" },
+      { title: "I Love It Loud",      album: "Creatures of the Night" },
+      { title: "I Still Love You",    album: "Creatures of the Night" },
+      { title: "War Machine",         album: "Creatures of the Night" },
+      { title: "Saint and Sinner",    album: "Creatures of the Night" },
+      // Lick It Up (1983)
+      { title: "Lick It Up",          album: "Lick It Up" },
+      { title: "All Hell's Breakin' Loose", album: "Lick It Up" },
+      { title: "Not for the Innocent", album: "Lick It Up" },
+      { title: "Young and Wasted",    album: "Lick It Up" },
+      // Animalize (1984)
+      { title: "Heaven's on Fire",    album: "Animalize" },
+      { title: "Thrills in the Night", album: "Animalize" },
+      { title: "I've Had Enough (Into the Fire)", album: "Animalize" },
+      { title: "Burn Bitch Burn",     album: "Animalize" },
+      // Asylum (1985)
+      { title: "Tears Are Falling",   album: "Asylum" },
+      { title: "Who Wants to Be Lonely", album: "Asylum" },
+      { title: "King of the Mountain", album: "Asylum" },
+      { title: "Uh! All Night",       album: "Asylum" },
+      // Crazy Nights (1987)
+      { title: "Crazy Crazy Nights",  album: "Crazy Nights" },
+      { title: "Reason to Live",      album: "Crazy Nights" },
+      { title: "Turn on the Night",   album: "Crazy Nights" },
+      { title: "No No No",            album: "Crazy Nights" },
+      // Hot in the Shade (1989)
+      { title: "Hide Your Heart",     album: "Hot in the Shade" },
+      { title: "Forever",             album: "Hot in the Shade" },
+      { title: "Rise to It",          album: "Hot in the Shade" },
+      { title: "Read My Body",        album: "Hot in the Shade" },
+      // Revenge (1992)
+      { title: "Unholy",              album: "Revenge" },
+      { title: "God Gave Rock 'n' Roll to You II", album: "Revenge" },
+      { title: "Domino",              album: "Revenge" },
+      { title: "Take It Off",         album: "Revenge" },
+      // Psycho Circus (1998)
+      { title: "Psycho Circus",       album: "Psycho Circus" },
+      { title: "Within",              album: "Psycho Circus" },
+      { title: "Into the Void",       album: "Psycho Circus" },
+      { title: "You Wanted the Best", album: "Psycho Circus" },
+    ];
+
+    const artCache = {};
+
+    async function fetchAlbumArt(albumName) {
+      if (artCache[albumName] !== undefined) return artCache[albumName];
+
+      try {
+        // For the self-titled album, disambiguation helps
+        const searchTerm = albumName === "KISS" ? "KISS 1974 album" : `KISS ${albumName}`;
+        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=album&limit=10`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const match = data.results.find(r =>
+          r.artistName.toLowerCase().includes('kiss') &&
+          r.collectionName.toLowerCase().includes(albumName.toLowerCase())
+        ) || data.results.find(r => r.artistName.toLowerCase().includes('kiss'));
+
+        if (match?.artworkUrl100) {
+          const art = match.artworkUrl100.replace('100x100bb', '600x600bb');
+          artCache[albumName] = art;
+          return art;
+        }
+      } catch (e) {
+        console.warn('Could not fetch album art:', e);
+      }
+
+      artCache[albumName] = null;
+      return null;
+    }
+
+    async function pickRandomSong() {
+      const btn = document.getElementById('btn');
+      btn.disabled = true;
+
+      const song = songs[Math.floor(Math.random() * songs.length)];
+      const img = document.getElementById('album-cover');
+      const placeholder = document.getElementById('placeholder');
+
+      // Reset state
+      img.classList.add('loading');
+      placeholder.style.display = 'flex';
+      document.getElementById('song-title').textContent = song.title;
+      document.getElementById('album-name').textContent = song.album;
+
+      const artUrl = await fetchAlbumArt(song.album);
+
+      if (artUrl) {
+        img.onload = () => {
+          placeholder.style.display = 'none';
+          img.classList.remove('loading');
+          btn.disabled = false;
+        };
+        img.onerror = () => {
+          img.classList.remove('loading');
+          btn.disabled = false;
+        };
+        img.src = artUrl;
+        img.alt = `${song.album} album cover`;
+      } else {
+        img.classList.remove('loading');
+        placeholder.textContent = '🎸';
+        btn.disabled = false;
+      }
+    }
+
+    pickRandomSong();
+  </script>
+
+</body>
+</html>
