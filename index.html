@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KISS Random Song</title>
+  <title>KISS Album Quiz</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -19,12 +19,25 @@
       padding: 20px;
     }
 
+    #score {
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      color: #888;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    #score span {
+      color: #c8a84b;
+      font-size: 1.2rem;
+    }
+
     h1 {
       font-size: 6rem;
       letter-spacing: 0.6rem;
       color: #c8a84b;
       text-shadow: 0 0 30px rgba(200, 168, 75, 0.6), 0 0 60px rgba(200, 168, 75, 0.2);
-      margin-bottom: 40px;
+      margin-bottom: 32px;
       user-select: none;
     }
 
@@ -34,15 +47,86 @@
       border-radius: 14px;
       padding: 32px;
       width: 100%;
-      max-width: 380px;
+      max-width: 460px;
       text-align: center;
       box-shadow: 0 0 50px rgba(200, 168, 75, 0.15), 0 20px 60px rgba(0,0,0,0.8);
     }
 
+    #question-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    #song-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 28px;
+      line-height: 1.3;
+    }
+
+    #choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .choice-btn {
+      background: #1e1e1e;
+      color: #ccc;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      letter-spacing: 0.03em;
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      background: #252520;
+      border-color: #c8a84b;
+      color: #fff;
+    }
+
+    .choice-btn:disabled {
+      cursor: default;
+    }
+
+    .choice-btn.correct {
+      background: #0d2e0d;
+      border-color: #4caf50;
+      color: #4caf50;
+    }
+
+    .choice-btn.wrong {
+      background: #2e0d0d;
+      border-color: #e53935;
+      color: #e53935;
+    }
+
+    /* Album reveal */
+    #reveal {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.5s ease;
+    }
+
+    #reveal.show {
+      max-height: 500px;
+    }
+
     #album-cover-wrap {
-      width: 300px;
-      height: 300px;
-      margin: 0 auto 24px;
+      width: 260px;
+      height: 260px;
+      margin: 0 auto 16px;
       border-radius: 8px;
       overflow: hidden;
       background: #222;
@@ -54,11 +138,12 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: opacity 0.3s ease;
+      opacity: 0;
+      transition: opacity 0.4s ease 0.2s;
     }
 
-    #album-cover.loading {
-      opacity: 0;
+    #album-cover.loaded {
+      opacity: 1;
     }
 
     #placeholder {
@@ -67,32 +152,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 5rem;
+      font-size: 4rem;
       background: #1a1a1a;
     }
 
-    #song-title {
-      font-size: 1.4rem;
+    #feedback {
+      font-size: 1.1rem;
       font-weight: 900;
+      margin-bottom: 24px;
       letter-spacing: 0.05em;
-      color: #fff;
-      margin-bottom: 8px;
-      min-height: 2em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    #album-name {
-      font-size: 0.95rem;
-      color: #888;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 28px;
-      min-height: 1.4em;
-    }
+    #feedback.correct { color: #4caf50; }
+    #feedback.wrong   { color: #e53935; }
 
-    button {
+    #next-btn {
       background: #c8a84b;
       color: #000;
       border: none;
@@ -105,34 +179,37 @@
       text-transform: uppercase;
       letter-spacing: 0.2em;
       transition: background 0.15s, transform 0.1s;
+      display: none;
     }
 
-    button:hover {
-      background: #dbbe6a;
+    #next-btn.show {
+      display: inline-block;
     }
 
-    button:active {
-      transform: scale(0.97);
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
+    #next-btn:hover { background: #dbbe6a; }
+    #next-btn:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
 
+  <div id="score">Score: <span id="score-val">0 / 0</span></div>
   <h1>KISS</h1>
 
   <div id="card">
-    <div id="album-cover-wrap">
-      <div id="placeholder">🎸</div>
-      <img id="album-cover" class="loading" src="" alt="Album Cover">
-    </div>
+    <div id="question-label">Which album is this song from?</div>
     <div id="song-title">&nbsp;</div>
-    <div id="album-name">&nbsp;</div>
-    <button id="btn" onclick="pickRandomSong()">Random Song</button>
+
+    <div id="choices"></div>
+
+    <div id="reveal">
+      <div id="album-cover-wrap">
+        <div id="placeholder">🎸</div>
+        <img id="album-cover" src="" alt="Album Cover">
+      </div>
+      <div id="feedback"></div>
+    </div>
+
+    <button id="next-btn" onclick="nextQuestion()">Next Song &rarr;</button>
   </div>
 
   <script>
@@ -227,23 +304,32 @@
       { title: "You Wanted the Best", album: "Psycho Circus" },
     ];
 
+    const allAlbums = [...new Set(songs.map(s => s.album))];
     const artCache = {};
+
+    let correct = 0;
+    let total = 0;
+    let currentSong = null;
+
+    function shuffle(arr) {
+      return arr.slice().sort(() => Math.random() - 0.5);
+    }
+
+    function getChoices(correctAlbum) {
+      const wrong = shuffle(allAlbums.filter(a => a !== correctAlbum)).slice(0, 3);
+      return shuffle([...wrong, correctAlbum]);
+    }
 
     async function fetchAlbumArt(albumName) {
       if (artCache[albumName] !== undefined) return artCache[albumName];
-
       try {
-        // For the self-titled album, disambiguation helps
         const searchTerm = albumName === "KISS" ? "KISS 1974 album" : `KISS ${albumName}`;
-        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=album&limit=10`;
-        const res = await fetch(url);
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=album&limit=10`);
         const data = await res.json();
-
         const match = data.results.find(r =>
           r.artistName.toLowerCase().includes('kiss') &&
           r.collectionName.toLowerCase().includes(albumName.toLowerCase())
         ) || data.results.find(r => r.artistName.toLowerCase().includes('kiss'));
-
         if (match?.artworkUrl100) {
           const art = match.artworkUrl100.replace('100x100bb', '600x600bb');
           artCache[albumName] = art;
@@ -252,47 +338,77 @@
       } catch (e) {
         console.warn('Could not fetch album art:', e);
       }
-
       artCache[albumName] = null;
       return null;
     }
 
-    async function pickRandomSong() {
-      const btn = document.getElementById('btn');
-      btn.disabled = true;
+    function nextQuestion() {
+      // Reset UI
+      document.getElementById('reveal').classList.remove('show');
+      document.getElementById('next-btn').classList.remove('show');
+      document.getElementById('album-cover').classList.remove('loaded');
+      document.getElementById('album-cover').src = '';
+      document.getElementById('placeholder').style.display = 'flex';
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = '';
 
-      const song = songs[Math.floor(Math.random() * songs.length)];
-      const img = document.getElementById('album-cover');
-      const placeholder = document.getElementById('placeholder');
+      // Pick a new song (avoid repeating)
+      let song;
+      do { song = songs[Math.floor(Math.random() * songs.length)]; }
+      while (songs.length > 1 && song === currentSong);
+      currentSong = song;
 
-      // Reset state
-      img.classList.add('loading');
-      placeholder.style.display = 'flex';
-      document.getElementById('song-title').textContent = song.title;
-      document.getElementById('album-name').textContent = song.album;
+      document.getElementById('song-title').textContent = `"${song.title}"`;
 
-      const artUrl = await fetchAlbumArt(song.album);
+      const choices = getChoices(song.album);
+      const container = document.getElementById('choices');
+      container.innerHTML = '';
 
+      choices.forEach(album => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = album;
+        btn.onclick = () => handleAnswer(album, song.album);
+        container.appendChild(btn);
+      });
+    }
+
+    async function handleAnswer(chosen, correct_album) {
+      total++;
+      const isCorrect = chosen === correct_album;
+      if (isCorrect) correct++;
+
+      document.getElementById('score-val').textContent = `${correct} / ${total}`;
+
+      // Disable all buttons and highlight
+      document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correct_album) btn.classList.add('correct');
+        else if (btn.textContent === chosen) btn.classList.add('wrong');
+      });
+
+      // Feedback text
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = isCorrect ? 'Correct!' : `Nope — it was ${correct_album}`;
+      feedback.className = isCorrect ? 'correct' : 'wrong';
+
+      // Reveal album art
+      document.getElementById('reveal').classList.add('show');
+      document.getElementById('next-btn').classList.add('show');
+
+      const artUrl = await fetchAlbumArt(correct_album);
       if (artUrl) {
+        const img = document.getElementById('album-cover');
         img.onload = () => {
-          placeholder.style.display = 'none';
-          img.classList.remove('loading');
-          btn.disabled = false;
-        };
-        img.onerror = () => {
-          img.classList.remove('loading');
-          btn.disabled = false;
+          document.getElementById('placeholder').style.display = 'none';
+          img.classList.add('loaded');
         };
         img.src = artUrl;
-        img.alt = `${song.album} album cover`;
-      } else {
-        img.classList.remove('loading');
-        placeholder.textContent = '🎸';
-        btn.disabled = false;
+        img.alt = `${correct_album} album cover`;
       }
     }
 
-    pickRandomSong();
+    nextQuestion();
   </script>
 
 </body>
