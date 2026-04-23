@@ -47,7 +47,7 @@
       border-radius: 14px;
       padding: 32px;
       width: 100%;
-      max-width: 460px;
+      max-width: 500px;
       text-align: center;
       box-shadow: 0 0 50px rgba(200, 168, 75, 0.15), 0 20px 60px rgba(0,0,0,0.8);
     }
@@ -64,36 +64,32 @@
       font-size: 1.6rem;
       font-weight: 900;
       color: #fff;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       line-height: 1.3;
     }
 
+    /* 2x2 image grid */
     #choices {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .choice-btn {
       background: #1e1e1e;
-      color: #ccc;
-      border: 1px solid #3a3a3a;
+      border: 2px solid #3a3a3a;
       border-radius: 8px;
-      padding: 14px 20px;
-      font-size: 0.95rem;
-      font-family: 'Arial Black', Arial, sans-serif;
-      font-weight: 700;
       cursor: pointer;
+      overflow: hidden;
+      padding: 0;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
       text-align: left;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-      letter-spacing: 0.03em;
     }
 
     .choice-btn:hover:not(:disabled) {
-      background: #252520;
       border-color: #c8a84b;
-      color: #fff;
+      transform: scale(1.02);
     }
 
     .choice-btn:disabled {
@@ -101,66 +97,69 @@
     }
 
     .choice-btn.correct {
-      background: #0d2e0d;
       border-color: #4caf50;
-      color: #4caf50;
+      box-shadow: 0 0 16px rgba(76, 175, 80, 0.5);
     }
 
     .choice-btn.wrong {
-      background: #2e0d0d;
       border-color: #e53935;
-      color: #e53935;
+      box-shadow: 0 0 16px rgba(229, 57, 53, 0.4);
+      opacity: 0.6;
     }
 
-    /* Album reveal */
-    #reveal {
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.5s ease;
-    }
-
-    #reveal.show {
-      max-height: 500px;
-    }
-
-    #album-cover-wrap {
-      width: 260px;
-      height: 260px;
-      margin: 0 auto 16px;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #222;
+    .choice-img-wrap {
       position: relative;
-    }
-
-    #album-cover {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      opacity: 0;
-      transition: opacity 0.4s ease 0.2s;
+      aspect-ratio: 1;
+      background: #111;
+      overflow: hidden;
     }
 
-    #album-cover.loaded {
-      opacity: 1;
-    }
-
-    #placeholder {
+    .choice-placeholder {
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 4rem;
+      font-size: 2.5rem;
       background: #1a1a1a;
     }
 
-    #feedback {
-      font-size: 1.1rem;
-      font-weight: 900;
-      margin-bottom: 24px;
+    .choice-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      position: relative;
+    }
+
+    .choice-img.loaded {
+      opacity: 1;
+    }
+
+    .choice-label {
+      padding: 8px 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-family: 'Arial Black', Arial, sans-serif;
+      text-align: center;
+      color: #bbb;
       letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.3;
+    }
+
+    .choice-btn.correct .choice-label { color: #4caf50; }
+    .choice-btn.wrong   .choice-label { color: #e53935; }
+
+    #feedback {
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      min-height: 1.4em;
+      margin-bottom: 16px;
     }
 
     #feedback.correct { color: #4caf50; }
@@ -182,10 +181,7 @@
       display: none;
     }
 
-    #next-btn.show {
-      display: inline-block;
-    }
-
+    #next-btn.show { display: inline-block; }
     #next-btn:hover { background: #dbbe6a; }
     #next-btn:active { transform: scale(0.97); }
   </style>
@@ -198,110 +194,218 @@
   <div id="card">
     <div id="question-label">Which album is this song from?</div>
     <div id="song-title">&nbsp;</div>
-
     <div id="choices"></div>
-
-    <div id="reveal">
-      <div id="album-cover-wrap">
-        <div id="placeholder">🎸</div>
-        <img id="album-cover" src="" alt="Album Cover">
-      </div>
-      <div id="feedback"></div>
-    </div>
-
+    <div id="feedback"></div>
     <button id="next-btn" onclick="nextQuestion()">Next Song &rarr;</button>
   </div>
 
   <script>
     const songs = [
       // KISS (1974)
-      { title: "Strutter",            album: "KISS" },
-      { title: "Nothin' to Lose",     album: "KISS" },
-      { title: "Firehouse",           album: "KISS" },
-      { title: "Cold Gin",            album: "KISS" },
-      { title: "Deuce",               album: "KISS" },
-      { title: "Black Diamond",       album: "KISS" },
+      { title: "Strutter",                    album: "KISS" },
+      { title: "Nothin' to Lose",             album: "KISS" },
+      { title: "Firehouse",                   album: "KISS" },
+      { title: "Cold Gin",                    album: "KISS" },
+      { title: "Let Me Know",                 album: "KISS" },
+      { title: "Kissin' Time",                album: "KISS" },
+      { title: "Deuce",                       album: "KISS" },
+      { title: "100,000 Years",               album: "KISS" },
+      { title: "Black Diamond",               album: "KISS" },
       // Hotter Than Hell (1974)
-      { title: "Got to Choose",       album: "Hotter Than Hell" },
-      { title: "Parasite",            album: "Hotter Than Hell" },
-      { title: "Hotter Than Hell",    album: "Hotter Than Hell" },
-      { title: "Watchin' You",        album: "Hotter Than Hell" },
-      { title: "Comin' Home",         album: "Hotter Than Hell" },
-      { title: "Strange Ways",        album: "Hotter Than Hell" },
+      { title: "Got to Choose",               album: "Hotter Than Hell" },
+      { title: "Parasite",                    album: "Hotter Than Hell" },
+      { title: "Hotter Than Hell",            album: "Hotter Than Hell" },
+      { title: "Watchin' You",                album: "Hotter Than Hell" },
+      { title: "Mainline",                    album: "Hotter Than Hell" },
+      { title: "All the Way",                 album: "Hotter Than Hell" },
+      { title: "Comin' Home",                 album: "Hotter Than Hell" },
+      { title: "Strange Ways",                album: "Hotter Than Hell" },
+      { title: "Goin' Blind",                 album: "Hotter Than Hell" },
+      { title: "Let Me Go, Rock 'N' Roll",    album: "Hotter Than Hell" },
       // Dressed to Kill (1975)
-      { title: "Room Service",        album: "Dressed to Kill" },
-      { title: "C'mon and Love Me",   album: "Dressed to Kill" },
-      { title: "She",                 album: "Dressed to Kill" },
-      { title: "Love Her All I Can",  album: "Dressed to Kill" },
-      { title: "Rock and Roll All Nite", album: "Dressed to Kill" },
+      { title: "Room Service",                album: "Dressed to Kill" },
+      { title: "Two Timer",                   album: "Dressed to Kill" },
+      { title: "Ladies in Waiting",           album: "Dressed to Kill" },
+      { title: "Rock Bottom",                 album: "Dressed to Kill" },
+      { title: "C'mon and Love Me",           album: "Dressed to Kill" },
+      { title: "Anything for My Baby",        album: "Dressed to Kill" },
+      { title: "She",                         album: "Dressed to Kill" },
+      { title: "Love Her All I Can",          album: "Dressed to Kill" },
+      { title: "Rock and Roll All Nite",      album: "Dressed to Kill" },
       // Destroyer (1976)
-      { title: "Detroit Rock City",   album: "Destroyer" },
+      { title: "Detroit Rock City",           album: "Destroyer" },
       { title: "King of the Night Time World", album: "Destroyer" },
-      { title: "God of Thunder",      album: "Destroyer" },
-      { title: "Shout It Out Loud",   album: "Destroyer" },
-      { title: "Beth",                album: "Destroyer" },
-      { title: "Do You Love Me",      album: "Destroyer" },
-      { title: "Flaming Youth",       album: "Destroyer" },
+      { title: "God of Thunder",              album: "Destroyer" },
+      { title: "Great Expectations",          album: "Destroyer" },
+      { title: "Flaming Youth",               album: "Destroyer" },
+      { title: "Sweet Pain",                  album: "Destroyer" },
+      { title: "Shout It Out Loud",           album: "Destroyer" },
+      { title: "Beth",                        album: "Destroyer" },
+      { title: "Do You Love Me",              album: "Destroyer" },
       // Rock and Roll Over (1976)
-      { title: "I Want You",          album: "Rock and Roll Over" },
-      { title: "Calling Dr. Love",    album: "Rock and Roll Over" },
-      { title: "Ladies Room",         album: "Rock and Roll Over" },
-      { title: "Hard Luck Woman",     album: "Rock and Roll Over" },
-      { title: "Makin' Love",         album: "Rock and Roll Over" },
-      { title: "Mr. Speed",           album: "Rock and Roll Over" },
+      { title: "I Want You",                  album: "Rock and Roll Over" },
+      { title: "Take Me",                     album: "Rock and Roll Over" },
+      { title: "Calling Dr. Love",            album: "Rock and Roll Over" },
+      { title: "Ladies Room",                 album: "Rock and Roll Over" },
+      { title: "Baby Driver",                 album: "Rock and Roll Over" },
+      { title: "Love 'Em and Leave 'Em",      album: "Rock and Roll Over" },
+      { title: "Mr. Speed",                   album: "Rock and Roll Over" },
+      { title: "See You in Your Dreams",      album: "Rock and Roll Over" },
+      { title: "Hard Luck Woman",             album: "Rock and Roll Over" },
+      { title: "Makin' Love",                 album: "Rock and Roll Over" },
       // Love Gun (1977)
-      { title: "I Stole Your Love",   album: "Love Gun" },
-      { title: "Christine Sixteen",   album: "Love Gun" },
-      { title: "Shock Me",            album: "Love Gun" },
-      { title: "Love Gun",            album: "Love Gun" },
-      { title: "Plaster Caster",      album: "Love Gun" },
-      { title: "Almost Human",        album: "Love Gun" },
+      { title: "I Stole Your Love",           album: "Love Gun" },
+      { title: "Christine Sixteen",           album: "Love Gun" },
+      { title: "Got Love for Sale",           album: "Love Gun" },
+      { title: "Hooligan",                    album: "Love Gun" },
+      { title: "Tomorrow and Tonight",        album: "Love Gun" },
+      { title: "Love Gun",                    album: "Love Gun" },
+      { title: "Almost Human",               album: "Love Gun" },
+      { title: "Plaster Caster",              album: "Love Gun" },
+      { title: "Then She Kissed Me",          album: "Love Gun" },
+      { title: "Shock Me",                    album: "Love Gun" },
       // Dynasty (1979)
-      { title: "I Was Made for Lovin' You", album: "Dynasty" },
-      { title: "Sure Know Something", album: "Dynasty" },
-      { title: "2,000 Man",           album: "Dynasty" },
-      { title: "X-Ray Eyes",          album: "Dynasty" },
+      { title: "I Was Made for Lovin' You",   album: "Dynasty" },
+      { title: "2,000 Man",                   album: "Dynasty" },
+      { title: "Sure Know Something",         album: "Dynasty" },
+      { title: "Dirty Livin'",                album: "Dynasty" },
+      { title: "Charisma",                    album: "Dynasty" },
+      { title: "Magic Touch",                 album: "Dynasty" },
+      { title: "Hard Times",                  album: "Dynasty" },
+      { title: "X-Ray Eyes",                  album: "Dynasty" },
+      { title: "Save Your Love",              album: "Dynasty" },
+      // Unmasked (1980)
+      { title: "Is That You?",                album: "Unmasked" },
+      { title: "Shandi",                      album: "Unmasked" },
+      { title: "Talk to Me",                  album: "Unmasked" },
+      { title: "Naked City",                  album: "Unmasked" },
+      { title: "What Makes the World Go 'Round", album: "Unmasked" },
+      { title: "Tomorrow",                    album: "Unmasked" },
+      { title: "She's So European",           album: "Unmasked" },
+      { title: "Easy as It Seems",            album: "Unmasked" },
+      { title: "You're All That I Want",      album: "Unmasked" },
+      { title: "Torpedo Girl",                album: "Unmasked" },
+      // Music from "The Elder" (1981)
+      { title: "The Oath",                    album: "Music from \"The Elder\"" },
+      { title: "Just a Boy",                  album: "Music from \"The Elder\"" },
+      { title: "Dark Light",                  album: "Music from \"The Elder\"" },
+      { title: "Only You",                    album: "Music from \"The Elder\"" },
+      { title: "Under the Rose",              album: "Music from \"The Elder\"" },
+      { title: "A World Without Heroes",      album: "Music from \"The Elder\"" },
+      { title: "Mr. Blackwell",               album: "Music from \"The Elder\"" },
+      { title: "Escape from the Island",      album: "Music from \"The Elder\"" },
+      { title: "I",                           album: "Music from \"The Elder\"" },
+      { title: "Move On",                     album: "Music from \"The Elder\"" },
       // Creatures of the Night (1982)
-      { title: "Creatures of the Night", album: "Creatures of the Night" },
-      { title: "I Love It Loud",      album: "Creatures of the Night" },
-      { title: "I Still Love You",    album: "Creatures of the Night" },
-      { title: "War Machine",         album: "Creatures of the Night" },
-      { title: "Saint and Sinner",    album: "Creatures of the Night" },
+      { title: "Creatures of the Night",      album: "Creatures of the Night" },
+      { title: "Saint and Sinner",            album: "Creatures of the Night" },
+      { title: "Keep Me Comin'",              album: "Creatures of the Night" },
+      { title: "Rock and Roll Hell",          album: "Creatures of the Night" },
+      { title: "Danger",                      album: "Creatures of the Night" },
+      { title: "I Love It Loud",              album: "Creatures of the Night" },
+      { title: "I Still Love You",            album: "Creatures of the Night" },
+      { title: "War Machine",                 album: "Creatures of the Night" },
+      { title: "Killer",                      album: "Creatures of the Night" },
       // Lick It Up (1983)
-      { title: "Lick It Up",          album: "Lick It Up" },
-      { title: "All Hell's Breakin' Loose", album: "Lick It Up" },
-      { title: "Not for the Innocent", album: "Lick It Up" },
-      { title: "Young and Wasted",    album: "Lick It Up" },
+      { title: "Exciter",                     album: "Lick It Up" },
+      { title: "Not for the Innocent",        album: "Lick It Up" },
+      { title: "Lick It Up",                  album: "Lick It Up" },
+      { title: "Young and Wasted",            album: "Lick It Up" },
+      { title: "Gimme More",                  album: "Lick It Up" },
+      { title: "All Hell's Breakin' Loose",   album: "Lick It Up" },
+      { title: "A Million to One",            album: "Lick It Up" },
+      { title: "Fits Like a Glove",           album: "Lick It Up" },
+      { title: "Dance All Over Your Face",    album: "Lick It Up" },
       // Animalize (1984)
-      { title: "Heaven's on Fire",    album: "Animalize" },
-      { title: "Thrills in the Night", album: "Animalize" },
       { title: "I've Had Enough (Into the Fire)", album: "Animalize" },
-      { title: "Burn Bitch Burn",     album: "Animalize" },
+      { title: "Heaven's on Fire",            album: "Animalize" },
+      { title: "Burn Bitch Burn",             album: "Animalize" },
+      { title: "Get All You Can Take",        album: "Animalize" },
+      { title: "Lonely Is the Hunter",        album: "Animalize" },
+      { title: "Under the Gun",               album: "Animalize" },
+      { title: "Thrills in the Night",        album: "Animalize" },
+      { title: "While the City Sleeps",       album: "Animalize" },
+      { title: "Murder in High-Heels",        album: "Animalize" },
       // Asylum (1985)
-      { title: "Tears Are Falling",   album: "Asylum" },
-      { title: "Who Wants to Be Lonely", album: "Asylum" },
-      { title: "King of the Mountain", album: "Asylum" },
-      { title: "Uh! All Night",       album: "Asylum" },
+      { title: "King of the Mountain",        album: "Asylum" },
+      { title: "Any Way You Slice It",        album: "Asylum" },
+      { title: "Who Wants to Be Lonely",      album: "Asylum" },
+      { title: "Trial by Fire",               album: "Asylum" },
+      { title: "I'm Alive",                   album: "Asylum" },
+      { title: "Love's a Deadly Weapon",      album: "Asylum" },
+      { title: "Tears Are Falling",           album: "Asylum" },
+      { title: "Secretly Cruel",              album: "Asylum" },
+      { title: "Radar for Love",              album: "Asylum" },
+      { title: "Uh! All Night",               album: "Asylum" },
       // Crazy Nights (1987)
-      { title: "Crazy Crazy Nights",  album: "Crazy Nights" },
-      { title: "Reason to Live",      album: "Crazy Nights" },
-      { title: "Turn on the Night",   album: "Crazy Nights" },
-      { title: "No No No",            album: "Crazy Nights" },
+      { title: "Crazy Crazy Nights",          album: "Crazy Nights" },
+      { title: "I'll Fight Hell to Hold You", album: "Crazy Nights" },
+      { title: "Bang Bang You",               album: "Crazy Nights" },
+      { title: "No No No",                    album: "Crazy Nights" },
+      { title: "Hell or High Water",          album: "Crazy Nights" },
+      { title: "My Way",                      album: "Crazy Nights" },
+      { title: "When Your Walls Come Down",   album: "Crazy Nights" },
+      { title: "Reason to Live",              album: "Crazy Nights" },
+      { title: "Good Girl Gone Bad",          album: "Crazy Nights" },
+      { title: "Turn on the Night",           album: "Crazy Nights" },
+      { title: "Thief in the Night",          album: "Crazy Nights" },
       // Hot in the Shade (1989)
-      { title: "Hide Your Heart",     album: "Hot in the Shade" },
-      { title: "Forever",             album: "Hot in the Shade" },
-      { title: "Rise to It",          album: "Hot in the Shade" },
-      { title: "Read My Body",        album: "Hot in the Shade" },
+      { title: "Rise to It",                  album: "Hot in the Shade" },
+      { title: "Betrayed",                    album: "Hot in the Shade" },
+      { title: "Hide Your Heart",             album: "Hot in the Shade" },
+      { title: "Prisoner of Love",            album: "Hot in the Shade" },
+      { title: "Read My Body",                album: "Hot in the Shade" },
+      { title: "Cadillac Dreams",             album: "Hot in the Shade" },
+      { title: "King of Hearts",              album: "Hot in the Shade" },
+      { title: "Little Caesar",               album: "Hot in the Shade" },
+      { title: "Thou Shalt Not",              album: "Hot in the Shade" },
+      { title: "Forever",                     album: "Hot in the Shade" },
+      { title: "Somewhere Between Heaven and Hell", album: "Hot in the Shade" },
       // Revenge (1992)
-      { title: "Unholy",              album: "Revenge" },
+      { title: "Unholy",                      album: "Revenge" },
+      { title: "Take It Off",                 album: "Revenge" },
+      { title: "Tough Love",                  album: "Revenge" },
+      { title: "Spit",                        album: "Revenge" },
       { title: "God Gave Rock 'n' Roll to You II", album: "Revenge" },
-      { title: "Domino",              album: "Revenge" },
-      { title: "Take It Off",         album: "Revenge" },
+      { title: "Domino",                      album: "Revenge" },
+      { title: "Heart of Chrome",             album: "Revenge" },
+      { title: "Whine Jar",                   album: "Revenge" },
+      { title: "The Wall",                    album: "Revenge" },
+      { title: "I Just Wanna",                album: "Revenge" },
       // Psycho Circus (1998)
-      { title: "Psycho Circus",       album: "Psycho Circus" },
-      { title: "Within",              album: "Psycho Circus" },
-      { title: "Into the Void",       album: "Psycho Circus" },
-      { title: "You Wanted the Best", album: "Psycho Circus" },
+      { title: "Psycho Circus",               album: "Psycho Circus" },
+      { title: "Into the Void",               album: "Psycho Circus" },
+      { title: "We Are One",                  album: "Psycho Circus" },
+      { title: "I Pledge Allegiance to the State of Rock & Roll", album: "Psycho Circus" },
+      { title: "Within",                      album: "Psycho Circus" },
+      { title: "I Finally Found My Way",      album: "Psycho Circus" },
+      { title: "You Wanted the Best",         album: "Psycho Circus" },
+      { title: "Journey of 1,000 Years",      album: "Psycho Circus" },
+      // Sonic Boom (2009)
+      { title: "Modern Day Delilah",          album: "Sonic Boom" },
+      { title: "Russian Roulette",            album: "Sonic Boom" },
+      { title: "Never Enough",                album: "Sonic Boom" },
+      { title: "Yes I Know (Nobody's Perfect)", album: "Sonic Boom" },
+      { title: "Stand",                       album: "Sonic Boom" },
+      { title: "Hot and Cold",                album: "Sonic Boom" },
+      { title: "All for the Love of Rock and Roll", album: "Sonic Boom" },
+      { title: "Take Me Down Below",          album: "Sonic Boom" },
+      { title: "I'm an Animal",               album: "Sonic Boom" },
+      { title: "When Lightning Strikes",      album: "Sonic Boom" },
+      { title: "Say Yeah",                    album: "Sonic Boom" },
+      // Monster (2012)
+      { title: "Hell or Hallelujah",          album: "Monster" },
+      { title: "Wall of Sound",               album: "Monster" },
+      { title: "Freak",                       album: "Monster" },
+      { title: "Back to the Stone Age",       album: "Monster" },
+      { title: "Shout Mercy",                 album: "Monster" },
+      { title: "Long Way Down",               album: "Monster" },
+      { title: "Outta This World",            album: "Monster" },
+      { title: "All for the Glory",           album: "Monster" },
+      { title: "Eat Your Heart Out",          album: "Monster" },
+      { title: "The Devil Is Me",             album: "Monster" },
+      { title: "Tigress",                     album: "Monster" },
+      { title: "Last Chance",                 album: "Monster" },
     ];
 
     const allAlbums = [...new Set(songs.map(s => s.album))];
@@ -323,13 +427,22 @@
     async function fetchAlbumArt(albumName) {
       if (artCache[albumName] !== undefined) return artCache[albumName];
       try {
-        const searchTerm = albumName === "KISS" ? "KISS 1974 album" : `KISS ${albumName}`;
+        let searchTerm;
+        if (albumName === "KISS") {
+          searchTerm = "KISS 1974 album";
+        } else if (albumName === 'Music from "The Elder"') {
+          searchTerm = "KISS The Elder";
+        } else {
+          searchTerm = `KISS ${albumName}`;
+        }
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=album&limit=10`);
         const data = await res.json();
-        const match = data.results.find(r =>
-          r.artistName.toLowerCase().includes('kiss') &&
-          r.collectionName.toLowerCase().includes(albumName.toLowerCase())
-        ) || data.results.find(r => r.artistName.toLowerCase().includes('kiss'));
+        const match =
+          data.results.find(r =>
+            r.artistName.toLowerCase().includes('kiss') &&
+            r.collectionName.toLowerCase().includes(albumName.replace(/"/g, '').toLowerCase())
+          ) ||
+          data.results.find(r => r.artistName.toLowerCase().includes('kiss'));
         if (match?.artworkUrl100) {
           const art = match.artworkUrl100.replace('100x100bb', '600x600bb');
           artCache[albumName] = art;
@@ -344,15 +457,11 @@
 
     function nextQuestion() {
       // Reset UI
-      document.getElementById('reveal').classList.remove('show');
-      document.getElementById('next-btn').classList.remove('show');
-      document.getElementById('album-cover').classList.remove('loaded');
-      document.getElementById('album-cover').src = '';
-      document.getElementById('placeholder').style.display = 'flex';
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
+      document.getElementById('next-btn').classList.remove('show');
 
-      // Pick a new song (avoid repeating)
+      // Pick a new song (avoid repeating last)
       let song;
       do { song = songs[Math.floor(Math.random() * songs.length)]; }
       while (songs.length > 1 && song === currentSong);
@@ -364,48 +473,58 @@
       const container = document.getElementById('choices');
       container.innerHTML = '';
 
-      choices.forEach(album => {
+      // Render cards immediately with placeholders
+      const btns = choices.map((album) => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn';
-        btn.textContent = album;
+        btn.innerHTML = `
+          <div class="choice-img-wrap">
+            <div class="choice-placeholder">🎸</div>
+            <img class="choice-img" alt="${album} cover">
+          </div>
+          <div class="choice-label">${album}</div>
+        `;
         btn.onclick = () => handleAnswer(album, song.album);
         container.appendChild(btn);
+        return btn;
+      });
+
+      // Fetch art for all choices in parallel
+      choices.forEach((album, i) => {
+        fetchAlbumArt(album).then(url => {
+          if (!url) return;
+          const img = btns[i].querySelector('.choice-img');
+          const placeholder = btns[i].querySelector('.choice-placeholder');
+          img.onload = () => {
+            placeholder.style.display = 'none';
+            img.classList.add('loaded');
+          };
+          img.src = url;
+        });
       });
     }
 
-    async function handleAnswer(chosen, correct_album) {
+    function handleAnswer(chosen, correctAlbum) {
       total++;
-      const isCorrect = chosen === correct_album;
+      const isCorrect = chosen === correctAlbum;
       if (isCorrect) correct++;
 
       document.getElementById('score-val').textContent = `${correct} / ${total}`;
 
-      // Disable all buttons and highlight
+      // Disable all buttons and highlight correct/wrong
       document.querySelectorAll('.choice-btn').forEach(btn => {
         btn.disabled = true;
-        if (btn.textContent === correct_album) btn.classList.add('correct');
-        else if (btn.textContent === chosen) btn.classList.add('wrong');
+        const label = btn.querySelector('.choice-label').textContent;
+        if (label === correctAlbum) btn.classList.add('correct');
+        else if (label === chosen) btn.classList.add('wrong');
       });
 
       // Feedback text
       const feedback = document.getElementById('feedback');
-      feedback.textContent = isCorrect ? 'Correct!' : `Nope — it was ${correct_album}`;
+      feedback.textContent = isCorrect ? 'Correct!' : `Nope — it was ${correctAlbum}`;
       feedback.className = isCorrect ? 'correct' : 'wrong';
 
-      // Reveal album art
-      document.getElementById('reveal').classList.add('show');
       document.getElementById('next-btn').classList.add('show');
-
-      const artUrl = await fetchAlbumArt(correct_album);
-      if (artUrl) {
-        const img = document.getElementById('album-cover');
-        img.onload = () => {
-          document.getElementById('placeholder').style.display = 'none';
-          img.classList.add('loaded');
-        };
-        img.src = artUrl;
-        img.alt = `${correct_album} album cover`;
-      }
     }
 
     nextQuestion();
